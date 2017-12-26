@@ -5,14 +5,7 @@ let mouse;
 let themecolor = new SVG.Color('#000');
 let bordercolor = new SVG.Color(themecolor.brightness() >= 0.5 ? '#333' : '#999');
 
-let BUTTON = function (draw, x, y, width, height, text, onclick, onhover) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-    this.text = text;
-    this.onclick = onclick;
-    this.onhover = onhover;
+BUTTON.prototype.construct = function (draw, x, y, width, height, text, onclick, onhover) {
     draw.rect(width, height).fill(bordercolor).move(x, y).stroke({ width: 2 });
     let t = draw.text(text).move(x+width/2, y-height/4);
     t.font({
@@ -32,17 +25,7 @@ let BUTTON = function (draw, x, y, width, height, text, onclick, onhover) {
     });
 };
 
-let GRID = function (cvg, gridcvg, OffsetX, OffsetY) {
-    // Draw grid
-    this.OffsetX = OffsetX;
-    this.OffsetY = OffsetY;
-    this.State = new Array(5000);
-    this.Cells = new Array(5000);
-    this.Origin = [500, 500];
-    this.CellSize = 30;
-    this.CellWidth = width / this.CellSize;
-    this.CellHeight = height / this.CellSize;
-
+GRID.prototype.construct = function (cvg, gridcvg, OffsetX, OffsetY) {
     for (let i = 0; i < this.State.length; ++i) {
 	this.State[i] = new Array(5000);
 	this.Cells[i] = new Array(5000);
@@ -51,6 +34,7 @@ let GRID = function (cvg, gridcvg, OffsetX, OffsetY) {
 	}
     }
 
+    // とりあえずoriginから500x500までSVGを生成、後は必要に応じて追加
     for (let y = 0; y < 100; y++) {
 	for (let x = 0; x < 100; x++) {
 	    this.Cells[y+500][x+500] = cvg.rect(this.CellSize, this.CellSize);
@@ -120,12 +104,21 @@ GRID.prototype.draw_grid = function (cvg) {
 
 GRID.prototype.redraw_cell = function (cvg, CellX, CellY) {
     let color = this.State[CellY][CellX] ? '#fff' : '#000';
+    if (!this.Cells[CellY][CellX]) {
+	// SVGが生成されていなかった場合
+	create_cell_svg(CellX, CellY);
+    }
     this.Cells[CellY][CellX].fill(color);
     // cvg.rect(this.CellSize, this.CellSize)
     // 	.fill(color)
     // 	.move((CellX-this.Origin[0]-this.OffsetX) * this.CellSize,
     // 	      (CellY-this.Origin[1]-this.OffsetY) * this.CellSize);
     // this.Cells[CellY][CellX].css('background-color', color);
+};
+
+GRID.prototype.create_cell_svg = function (x, y) {
+    this.Cells[y][x] = cvg.rect(this.CellSize, this.CellSize);
+    this.Cells[y][x].move(this.CellSize*x, this.CellSize*y);
 };
 
 GRID.prototype.run = function (cvg) {
@@ -210,29 +203,7 @@ GRID.prototype.redraw = function (cvg) {
 };
 
 GRID.prototype.import_rle = function (cvg, data) {
-    let lines = data.split('\n');
-    // コメントを飛ばす
-    {
-	let newlines = [];
-	for (let i = 0, l; l = lines[i]; ++i) {
-	    if (l[0] == '#') ;
-	    else newlines.push(l);
-	}
-	lines = newlines;
-    }
-
-    data = data.substr(data.indexOf('\n')+1);
-    let keywords = { x:'' , y:'' , rule:'' }
-    for (key in keywords) {
-	let offset = lines[0].indexOf(key);
-	if (offset == -1) break;
-	offset = lines[0].indexOf('=', offset);
-	if (offset == -1) break;
-	offset++;
-	let limit = lines[0].indexOf(',', offset) == -1 ? lines[0].length : lines[0].indexOf(',', offset);
-	keywords[key] = lines[0].substr(offset, limit-offset).trim();
-    }
-
+    let keywords = get_rle_info(data);
     let numeric = '',
 	xcursor = 0,
 	ycursor = 0;
@@ -284,6 +255,12 @@ GRID.prototype.export_rle = function () {
     return data;
 };
 
+GRID.prototype.move_view = function (offsetX, offsetY) {
+    this.OffsetX += offsetX % this.CellSize;
+    this.OffsetY += offsetY % this.CellSize;
+    this.Origin = [this.Origin[0]+offsetY/this.CellSize, this.Origin[1]+offsetX/this.CellSize];
+};
+
 window.onload = () => {
     let draw = SVG('drawing').size(width, height);
     // let draw = new Gaf($('#drawing'), width, height);
@@ -298,6 +275,7 @@ window.onload = () => {
 	if (e.key === " ") grid.run(draw);
 	if (e.key === "u") grid.update(draw);
 	if (e.key === "s") grid.stop();
+	if (e.key === "ArrowRight") grid.move_view(1,0);
     });
 
     $('#import').click(() => {
