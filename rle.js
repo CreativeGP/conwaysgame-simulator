@@ -1,18 +1,34 @@
 function get_rle_info(data) {
     let lines = data.split('\n');
+    let infos = { comment: '', name: '', author: '' };
     // コメントを飛ばす
     {
 	let newlines = [];
 	for (let i = 0, l; l = lines[i]; ++i) {
 	    if (l[0] == '#'){
+		// #lines
 		let kind_of_comment = l[1];
-		if (kind_of_comment == '');
+		if (kind_of_comment == 'C' || kind_of_comment == 'c') {
+		    // comment
+		    infos['comment'] += l.substr(2).trim()+'\n';
+		}
+		else if (kind_of_comment == 'N') {
+		    // name of the work
+		    infos['name'] += l.substr(2).trim();
+		}
+		if (kind_of_comment == 'O') {
+		    // author
+		    infos['author'] += l.substr(2).trim();
+		}
 	    }
 	    else newlines.push(l);
 	}
 	lines = newlines;
     }
 
+    // Delete a return sign at the end of the comment
+    infos['comment'].slice(0, -1);
+    
     data = data.substr(data.indexOf('\n')+1);
     let keywords = { x:'' , y:'' , rule:'' }
     for (key in keywords) {
@@ -22,10 +38,10 @@ function get_rle_info(data) {
 	if (offset == -1) break;
 	offset++;
 	let limit = lines[0].indexOf(',', offset) == -1 ? lines[0].length : lines[0].indexOf(',', offset);
-	keywords[key] = lines[0].substr(offset, limit-offset).trim();
+	infos[key] = lines[0].substr(offset, limit-offset).trim();
     }
 
-    return keywords;
+    return infos;
 }
 
 function get_raw_rle(data) {
