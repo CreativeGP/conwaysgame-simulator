@@ -27,7 +27,7 @@ function get_rle_info(data) {
     }
 
     // Delete a return sign at the end of the comment
-    infos['comment'].slice(0, -1);
+    infos['comment'] = infos['comment'].slice(0, -1);
     
     data = data.substr(data.indexOf('\n')+1);
     let keywords = { x:'' , y:'' , rule:'' }
