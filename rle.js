@@ -26,6 +26,8 @@ function get_rle_info(data) {
 	lines = newlines;
     }
 
+    if (!lines) return;
+
     // Delete a return sign at the end of the comment
     infos['comment'] = infos['comment'].slice(0, -1);
     
