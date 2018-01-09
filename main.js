@@ -115,6 +115,8 @@ GRID.prototype.create_cell_svg = function (x, y) {
 
 GRID.prototype.run = function () {
     setInterval(() => this.update(), 100);
+    // this.update();
+    // setTimeout(() => this.run(), 100);
 };
 
 GRID.prototype.stop = function () {
@@ -255,8 +257,17 @@ GRID.prototype.set_scale = function (scale) {
     this.CellWidth = SimulatorWidth / this.CellSize;
     this.CellHeight = SimulatorHeight / this.CellSize;
 
-    // Redraw grid
-    this.draw_grid(this.GridSVG);
+    if (this.Scale > 0.25)
+    {
+	// Redraw grid
+	$('#gridlayer').css('display', 'block');
+	this.draw_grid(this.GridSVG);
+    }
+    else
+    {
+	// If scale is too small, hide grid
+	$('#gridlayer').css('display', 'none');
+    }
 
     // Redraw cells
     // this.redraw();
