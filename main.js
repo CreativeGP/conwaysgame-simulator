@@ -303,6 +303,10 @@ window.onload = () => {
 	if (e.key === "w") grid.set_scale(grid.Scale*2);
     });
 
+    // Import RLE data by parameters
+    let rle = getParameterByName('d', location.href);
+    grid.import_rle(draw, rle);
+    
     // Disable
     // $('#import').click(() => {
     // 	grid.import_rle(draw, $('#rle').val());
