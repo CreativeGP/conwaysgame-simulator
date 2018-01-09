@@ -27,6 +27,7 @@ let GRID = function (svg, gridsvg, OffsetX, OffsetY) {
     this.CellHeight = SimulatorHeight / this.CellSize;
     this.Scale = 1.0;
     this.CellSVG = svg;
+    this.CellGroup = svg.group();
     this.GridSVG = gridsvg;
 
     this.construct(svg, gridsvg, OffsetX, OffsetY);

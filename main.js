@@ -30,8 +30,7 @@ GRID.prototype.construct = function (svg, gridsvg, OffsetX, OffsetY) {
     // とりあえずoriginから500x500までSVGを生成、後は必要に応じて追加
     for (let y = 0; y < 100; y++) {
 	for (let x = 0; x < 100; x++) {
-	    this.Cells[y+500][x+500] = svg.rect(this.CellSize, this.CellSize);
-	    this.Cells[y+500][x+500].move(this.CellSize*x, this.CellSize*y);
+	    this.create_cell_svg(y+500, x+500);
 	}
     }
 
@@ -51,7 +50,7 @@ GRID.prototype.construct = function (svg, gridsvg, OffsetX, OffsetY) {
 	    this.State[grid_y][grid_x] ^= 1;
 
 	    // Redraw
-	    this.redraw_cell(svg, grid_x, grid_y);
+	    this.redraw_cell(grid_x, grid_y);
 
 	    LastCell = [grid_x, grid_y];
 	});
@@ -69,7 +68,7 @@ GRID.prototype.construct = function (svg, gridsvg, OffsetX, OffsetY) {
 	    this.State[grid_y][grid_x] ^= 1;
 
 	    // Redraw
-	    this.redraw_cell(svg, grid_x, grid_y);
+	    this.redraw_cell(grid_x, grid_y);
 
 	    LastCell = [grid_x, grid_y];
 	});
@@ -89,7 +88,6 @@ GRID.prototype.draw_grid = function () {
 	    .stroke({ width: 1, color: BorderColor })
     }
     for (let y = -1; y < this.CellHeight+1; ++y) {
-	console.log(this.OffsetX%this.CellSize);
 	this.GridSVG.line(0, 0, SimulatorWidth+this.CellSize*2, 0)
 	    .move((this.OffsetX%this.CellSize) - this.CellSize,
 		  y * this.CellSize + (this.OffsetY%this.CellSize))
@@ -100,20 +98,19 @@ GRID.prototype.draw_grid = function () {
 GRID.prototype.redraw_cell = function (CellX, CellY) {
     let color = this.State[CellY][CellX] ? '#fff' : '#000';
     if (!this.Cells[CellY][CellX]) {
-	// SVGが生成されていなかった場合
-	this.create_cell_svg(CellX, CellY);
+	if (color == '#fff') {
+	    // Make new SVG::Rect object if the object is undefined
+	    // and required to fill it white
+	    this.create_cell_svg(CellX, CellY);
+	} else return;
     }
     this.Cells[CellY][CellX].fill(color);
-    // svg.rect(this.CellSize, this.CellSize)
-    // 	.fill(color)
-    // 	.move((CellX-this.Origin[0]-this.OffsetX) * this.CellSize,
-    // 	      (CellY-this.Origin[1]-this.OffsetY) * this.CellSize);
-    // this.Cells[CellY][CellX].css('background-color', color);
 };
 
 GRID.prototype.create_cell_svg = function (x, y) {
     this.Cells[y][x] = this.CellSVG.rect(this.CellSize, this.CellSize);
-    this.Cells[y][x].move(this.CellSize*x, this.CellSize*y);
+    this.Cells[y][x].move(this.CellSize*(x-this.Origin[1]), this.CellSize*(y-this.Origin[0]));
+    this.CellGroup.add(this.Cells[y][x]);
 };
 
 GRID.prototype.run = function () {
@@ -184,6 +181,7 @@ GRID.prototype.update = function () {
 };
 
 GRID.prototype.redraw = function () {
+    // Just call redraw_cell() with all cells
     for (let y = this.Origin[1];
 	 y < this.Origin[1]+this.CellHeight+2;
 	 ++y)
@@ -251,14 +249,23 @@ GRID.prototype.export_rle = function () {
 };
 
 GRID.prototype.set_scale = function (scale) {
-    // Redraw grid
-    this.draw_grid(this.GridSVG);
-    
+    // Change members
     this.Scale = scale;
     this.CellSize = DefaultCellSize * scale;
     this.CellWidth = SimulatorWidth / this.CellSize;
     this.CellHeight = SimulatorHeight / this.CellSize;
-    this.redraw();
+
+    // Redraw grid
+    this.draw_grid(this.GridSVG);
+
+    // Redraw cells
+    // this.redraw();
+    this.CellGroup.scale(this.Scale, this.Scale).translate(0, 0);
+    // $(this.CellGroup.node).attr('transfrom', `scale(${this.Scale})`);
+    // let recipirocal_number_of_scale = 1.0 / this.Scale;
+    // $(this.CellSVG.node).css('width', SimulatorWidth*recipirocal_number_of_scale);
+    // $(this.CellSVG.node).css('height', SimulatorHeight*recipirocal_number_of_scale);
+    
 };
 
 GRID.prototype.move_view = function (offsetX, offsetY) {
