@@ -28,11 +28,11 @@ GRID.prototype.construct = function (svg, gridsvg, OffsetX, OffsetY) {
     }
 
     // とりあえずoriginから500x500までSVGを生成、後は必要に応じて追加
-    for (let y = 0; y < 100; y++) {
-	for (let x = 0; x < 100; x++) {
-	    this.create_cell_svg(y+this.Origin.y, x+this.Origin.x);
-	}
-    }
+    // for (let y = 0; y < 100; y++) {
+    // 	for (let x = 0; x < 100; x++) {
+    // 	    this.create_cell_svg(y+this.Origin.y, x+this.Origin.x);
+    // 	}
+    // }
 
     (() => {
 	let IsMousePressed = false;
@@ -108,8 +108,9 @@ GRID.prototype.redraw_cell = function (CellX, CellY) {
 };
 
 GRID.prototype.create_cell_svg = function (x, y) {
-    this.Cells[y][x] = this.CellSVG.rect(this.CellSize, this.CellSize);
-    this.Cells[y][x].move(this.CellSize*(x-this.Origin.x), this.CellSize*(y-this.Origin.y));
+    this.Cells[y][x] = this.CellSVG.rect(this.DefaultCellSize, this.DefaultCellSize);
+    this.Cells[y][x].move(this.DefaultCellSize*(x-this.Origin.x),
+			  this.DefaultCellSize*(y-this.Origin.y));
     this.CellGroup.add(this.Cells[y][x]);
 };
 

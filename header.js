@@ -22,6 +22,7 @@ let GRID = function (svg, gridsvg, OffsetX, OffsetY) {
     this.Origin = { x: 0, y: 0 };
     this.State = new Array(5000);
     this.Cells = new Array(5000);
+    this.DefaultCellSize = 30;
     this.CellSize = 30;
     this.CellWidth = SimulatorWidth / this.CellSize;
     this.CellHeight = SimulatorHeight / this.CellSize;
