@@ -30,7 +30,7 @@ GRID.prototype.construct = function (svg, gridsvg, OffsetX, OffsetY) {
     // とりあえずoriginから500x500までSVGを生成、後は必要に応じて追加
     for (let y = 0; y < 100; y++) {
 	for (let x = 0; x < 100; x++) {
-	    this.create_cell_svg(y+500, x+500);
+	    this.create_cell_svg(y+this.Origin.y, x+this.Origin.x);
 	}
     }
 
@@ -42,8 +42,8 @@ GRID.prototype.construct = function (svg, gridsvg, OffsetX, OffsetY) {
 	    let pos = $('#drawing').position();
 	    let x = e.pageX - pos.left;
 	    let y = e.pageY - pos.top;
-	    let grid_x = Math.floor((x-this.OffsetX)/this.CellSize) + this.Origin[0];
-	    let grid_y = Math.floor((y-this.OffsetY)/this.CellSize) + this.Origin[1];
+	    let grid_x = Math.floor((x-this.OffsetX)/this.CellSize) + this.Origin.x;
+	    let grid_y = Math.floor((y-this.OffsetY)/this.CellSize) + this.Origin.y;
 	    if (LastCell[0]===grid_x && LastCell[1]===grid_y) return;
 
 	    // Switch 0 and 1 in the selecting rect
@@ -60,8 +60,8 @@ GRID.prototype.construct = function (svg, gridsvg, OffsetX, OffsetY) {
 	    let pos = $('#drawing').position();
 	    let x = e.pageX - pos.left;
 	    let y = e.pageY - pos.top;
-	    let grid_x = Math.floor((x-this.OffsetX)/this.CellSize) + this.Origin[0];
-	    let grid_y = Math.floor((y-this.OffsetY)/this.CellSize) + this.Origin[1];
+	    let grid_x = Math.floor((x-this.OffsetX)/this.CellSize) + this.Origin.x;
+	    let grid_y = Math.floor((y-this.OffsetY)/this.CellSize) + this.Origin.y;
 	    if (LastCell[0]===grid_x && LastCell[1]===grid_y) return;
 
 	    // Switch 0 and 1 in the selecting rect
@@ -109,7 +109,7 @@ GRID.prototype.redraw_cell = function (CellX, CellY) {
 
 GRID.prototype.create_cell_svg = function (x, y) {
     this.Cells[y][x] = this.CellSVG.rect(this.CellSize, this.CellSize);
-    this.Cells[y][x].move(this.CellSize*(x-this.Origin[1]), this.CellSize*(y-this.Origin[0]));
+    this.Cells[y][x].move(this.CellSize*(x-this.Origin.x), this.CellSize*(y-this.Origin.y));
     this.CellGroup.add(this.Cells[y][x]);
 };
 
@@ -184,12 +184,12 @@ GRID.prototype.update = function () {
 
 GRID.prototype.redraw = function () {
     // Just call redraw_cell() with all cells
-    for (let y = this.Origin[1];
-	 y < this.Origin[1]+this.CellHeight+2;
+    for (let y = this.Origin.y;
+	 y < this.Origin.y+this.CellHeight+2;
 	 ++y)
     {
-	for (let x = this.Origin[0];
-	     x < this.Origin[0]+this.CellWidth+2;
+	for (let x = this.Origin.x;
+	     x < this.Origin.x+this.CellWidth+2;
 	     ++x)
 	{
 	    this.redraw_cell(x, y);
@@ -202,14 +202,18 @@ GRID.prototype.import_rle = function (data) {
     let numeric = '',
 	xcursor = 0,
 	ycursor = 0;
-    for (let i = 0, d; d = data[i]; i++) {
+    for (let i = 0, d, rawdata = get_raw_rle(data); d = rawdata[i]; i++) {
 	if ($.isNumeric(d)) {
 	    numeric += d;
 	    continue;
 	}
 	let num = numeric == '' ? 1 : Number(numeric);
 	if (d == 'o') {
-	    for(let j=0;j<num;j++) this.State[Number(keywords['y'])+ycursor][Number(keywords['x'])+(xcursor++)] = 1;
+	    for(let j=0;j<num;j++)
+	    {
+		this.State[Number(keywords['y'])+ycursor][Number(keywords['x'])+(xcursor++)] = 1;
+		this.redraw_cell(Number(keywords['x'])+xcursor-1, Number(keywords['y'])+ycursor);
+	    }
 	}
 	if (d == 'b') {
 	    for(let j=0;j<num;j++) this.State[Number(keywords['y'])+ycursor][Number(keywords['x'])+(xcursor++)] = 0;
@@ -282,7 +286,7 @@ GRID.prototype.set_scale = function (scale) {
 GRID.prototype.move_view = function (offsetX, offsetY) {
     this.OffsetX += offsetX % this.CellSize;
     this.OffsetY += offsetY % this.CellSize;
-    this.Origin = [this.Origin[0]+offsetY/this.CellSize, this.Origin[1]+offsetX/this.CellSize];
+    this.Origin = [this.Origin.y+offsetY/this.CellSize, this.Origin.x+offsetX/this.CellSize];
 };
 
 window.onload = () => {
@@ -305,7 +309,7 @@ window.onload = () => {
 
     // Import RLE data by parameters
     let rle = getParameterByName('d', location.href);
-    grid.import_rle(draw, rle);
+    grid.import_rle(rle);
     
     // Disable
     // $('#import').click(() => {
