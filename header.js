@@ -31,5 +31,7 @@ let GRID = function (svg, gridsvg, OffsetX, OffsetY) {
     this.CellGroup = svg.group();
     this.GridSVG = gridsvg;
 
+    this.AliveHash = {};
+
     this.construct(svg, gridsvg, OffsetX, OffsetY);
 };

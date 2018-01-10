@@ -52,6 +52,9 @@ GRID.prototype.construct = function (svg, gridsvg, OffsetX, OffsetY) {
 	    // Redraw
 	    this.redraw_cell(grid_x, grid_y);
 
+	    // Update the alive hash
+	    this.update_cell_alive_hash(grid_x, grid_y);
+
 	    LastCell = [grid_x, grid_y];
 	});
 	$('#drawing').mouseup(() => { IsMousePressed = false; });
@@ -70,6 +73,9 @@ GRID.prototype.construct = function (svg, gridsvg, OffsetX, OffsetY) {
 	    // Redraw
 	    this.redraw_cell(grid_x, grid_y);
 
+	    // Update the alive hash
+	    this.update_cell_alive_hash(grid_x, grid_y);
+
 	    LastCell = [grid_x, grid_y];
 	});
 	
@@ -77,6 +83,17 @@ GRID.prototype.construct = function (svg, gridsvg, OffsetX, OffsetY) {
 
     this.draw_grid();
 };
+
+GRID.prototype.update_cell_alive_hash = function (x, y) {
+    if (this.State[y][x]) {
+	this.AliveHash[`${x} ${y}`] = '';
+//	console.log('added ${x} ${y}');
+    } else {
+	delete this.AliveHash[`${x} ${y}`];
+//	console.log('deleted ${x} ${y}');
+    }
+    console.log(Object.keys(this.AliveHash).length);
+}
 
 GRID.prototype.draw_grid = function () {
     $(this.GridSVG.node).empty();
@@ -148,14 +165,6 @@ GRID.prototype.update = function () {
     }
 
     label:
-    // for (let y = this.Origin[1];
-    // 	 y < this.Origin[1]+this.CellHeight+2;
-    // 	 ++y)
-    // {
-    // 	for (let x = this.Origin[0];
-    // 	     x < this.Origin[0]+this.CellWidth+2;
-    // 	     ++x)
-    // 	{
     for (let y = 1;
 	 y < 999;
 	 ++y)
