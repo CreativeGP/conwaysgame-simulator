@@ -86,7 +86,7 @@ GRID.prototype.construct = function (svg, gridsvg, OffsetX, OffsetY) {
 
 GRID.prototype.update_cell_alive_hash = function (x, y) {
     if (this.State[y][x]) {
-	this.AliveHash[`${x} ${y}`] = '';
+	this.AliveHash[`${x} ${y}`] = this.Cell[y][x];
 //	console.log('added ${x} ${y}');
     } else {
 	delete this.AliveHash[`${x} ${y}`];
