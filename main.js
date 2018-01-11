@@ -20,7 +20,7 @@ BUTTON.prototype.construct = function (draw, x, y, width, height, text, onclick,
 
 GRID.prototype.construct = function (svg, gridsvg, OffsetX, OffsetY) {
     for (let i = 0; i < this.State.length; ++i) {
-	this.State[i] = new Array(5000);
+ 	this.State[i] = new Array(5000);
 	this.Cells[i] = new Array(5000);
 	for (let j = 0; j < 1000; ++j) {
 	    this.State[i][j] = 0;
@@ -84,13 +84,13 @@ GRID.prototype.construct = function (svg, gridsvg, OffsetX, OffsetY) {
     this.draw_grid();
 };
 
-GRID.prototype.update_cell_alive_hash = function (x, y) {
-    if (this.State[y][x]) {
-	this.AliveHash[`${x} ${y}`] = this.Cell[y][x];
-//	console.log('added ${x} ${y}');
+GRID.prototype.update_cell_alive_hash = function (x, y, data=this.State) {
+    if (data[y][x]) {
+	this.AliveHash[`${x} ${y}`] = this.Cells[y][x];
+	//	console.log('added ${x} ${y}');
     } else {
 	delete this.AliveHash[`${x} ${y}`];
-//	console.log('deleted ${x} ${y}');
+	//	console.log('deleted ${x} ${y}');
     }
     console.log(Object.keys(this.AliveHash).length);
 }
@@ -143,14 +143,17 @@ GRID.prototype.stop = function () {
 
 GRID.prototype.count_surrounded_live_cells = function (x, y) {
     let res = 0;
-    res += this.State[y-1][x  ]?1:0;
-    res += this.State[y-1][x+1]?1:0;
-    res += this.State[y  ][x+1]?1:0;
-    res += this.State[y+1][x+1]?1:0;
-    res += this.State[y+1][x  ]?1:0;
-    res += this.State[y+1][x-1]?1:0;
-    res += this.State[y  ][x-1]?1:0;
-    res += this.State[y-1][x-1]?1:0;
+    try {
+	res += this.State[y-1][x  ]?1:0;
+	res += this.State[y-1][x+1]?1:0;
+	res += this.State[y  ][x+1]?1:0;
+	res += this.State[y+1][x+1]?1:0;
+	res += this.State[y+1][x  ]?1:0;
+	res += this.State[y+1][x-1]?1:0;
+	res += this.State[y  ][x-1]?1:0;
+	res += this.State[y-1][x-1]?1:0;
+    } catch (e) {
+    }
     return res;
 };
 
@@ -164,32 +167,127 @@ GRID.prototype.update = function () {
 	}
     }
 
-    label:
-    for (let y = 1;
-	 y < 999;
-	 ++y)
+    let changed_hash = {};
+
+    // for (let y = 1;
+    // 	 y < 999;
+    // 	 ++y)
+    // {
+    // 	for (let x = 1;
+    // 	     x < 999;
+    // 	     ++x)
+    // 	{
+    	    // let state = this.State[y][x];
+    	    // let live_cells = this.count_surrounded_live_cells(x, y);
+    	    // if (state == 0 && live_cells == 3) {
+    	    // 	new_state[y][x] = 1;
+    	    // }
+    	    // if (state == 1) {
+    	    // 	if (live_cells == 2 || live_cells == 3) continue;
+    	    // 	if (live_cells <= 1 || live_cells >= 4) {
+    	    // 	    new_state[y][x] = 0;
+    	    // 	}
+    	    // }
+    // 	}
+    // }
+    let keys = Object.keys(this.AliveHash);
+    for (let i=0, key, len=keys.length;
+	 key = keys[i];
+	 i++)
     {
-	for (let x = 1;
-	     x < 999;
-	     ++x)
+	let x, y;
 	{
-	    let state = this.State[y][x];
-	    let live_cells = this.count_surrounded_live_cells(x, y);
-	    if (state == 0 && live_cells == 3) {
-		new_state[y][x] = 1;
-	    }
-	    if (state == 1) {
-		if (live_cells == 2 || live_cells == 3) continue;
-		if (live_cells <= 1 || live_cells >= 4) {
-		    new_state[y][x] = 0;
- 		}
+	    let tmp = key.split(' ');
+	    x = Number(tmp[0]);
+	    y = Number(tmp[1]);
+	}
+
+	for (let j = x-1; j <= x+1; j++) {
+	    for (let k = y-1; k <= y+1; k++) {
+		if (!([j, k] in changed_hash)) {
+		    changed_hash[[j, k]] = 0;
+
+    		    // let state = this.State[k][j];
+		    // let sample = [this.State[k-1][j-1], this.State[k-1][j], this.State[k-1][j+1],
+		    // 	      this.State[k][j-1], this.State[k][j], this.State[k][j+1],
+		    // 	      this.State[k+1][j-1], this.State[k+1][j], this.State[k+1][j+1]];
+		    // let sample_num = 0;
+		    // for (let n = 0; n < 9; n++) {
+		    //     sample_num += sample[n] * (1 << n);
+		    // }
+
+		    // let calculated = PATTERNS[sample_num];
+		    // let tmp = (t, k, j, pro) => {
+		    //     if (!([j, k] in changed_hash)) changed_hash[[j, k]] = 0;
+		    //     return changed_hash[[j, k]] += (t != 0 ? 1 : -1) * pro * pro;
+		    // };
+		    // tmp(calculated & (1 << 4), k, j, 1);
+		    // tmp(calculated & (1 << 0), k-1, j-1, 1);
+		    // tmp(calculated & (1 << 1), k-1, j+0, 2);
+		    // tmp(calculated & (1 << 2), k-1, j+1, 1);
+		    // tmp(calculated & (1 << 3), k+0, j-1, 2);
+		    // tmp(calculated & (1 << 4), k+0, j+0, 8);
+		    // tmp(calculated & (1 << 5), k+0, j+1, 2);
+		    // tmp(calculated & (1 << 6), k+1, j-1, 1);
+		    // tmp(calculated & (1 << 7), k+1, j+0, 2);
+		    // tmp(calculated & (1 << 8), k+1, j+1, 1);
+
+    		    let state = this.State[k][j];
+    		    let live_cells = this.count_surrounded_live_cells(j, k);
+    		    if (state == 0 && live_cells == 3) {
+    		    	new_state[k][j] = 1;
+    		    }
+    		    if (state == 1) {
+    		    	if (live_cells == 2 || live_cells == 3) continue;
+    		    	if (live_cells <= 1 || live_cells >= 4) {
+    		    	    new_state[k][j] = 0;
+    		    	}
+    		    }
+		}
 	    }
 	}
+
+
+    	// let state = this.State[y][x];
+	// let sample = [this.State[y-1][x-1], this.State[y-1][x], this.State[y-1][x+1],
+	// 	      this.State[y][x-1], this.State[y][x], this.State[y][x+1],
+	// 	      this.State[y+1][x-1], this.State[y+1][x], this.State[y+1][x+1]];
+	// let sample_num = 0;
+	// for (let i = 0; i < 9; i++) {
+	//     sample_num += sample[i] * (1 << i);
+	// }
+
+	// let calculated = PATTERNS[sample_num];
+	// let tmp = (t, y, x) => {
+	//     if (!([x, y] in changed_hash)) changed_hash[[x, y]] = 0;
+	//     return changed_hash[[x, y]] += (t != 0 ? 1 : -1);
+	// };
+	// tmp(calculated & (1 << 0), y-1, x-1);
+	// tmp(calculated & (1 << 1), y-1, x+0);
+	// tmp(calculated & (1 << 2), y-1, x+1);
+	// tmp(calculated & (1 << 3), y+0, x-1);
+	// tmp(calculated & (1 << 4), y+0, x+0);
+	// tmp(calculated & (1 << 5), y+0, x+1);
+	// tmp(calculated & (1 << 6), y+1, x-1);
+	// tmp(calculated & (1 << 7), y+1, x+0);
+	// tmp(calculated & (1 << 8), y+1, x+1);
     }
 
     this.State = new_state;
+    // let changed_coords = Object.keys(changed_hash);
+    // for (let i = 0, c; c = changed_coords[i]; i++) {
+    // 	let tmp = c.split(',').map(Number);
+    // 	this.State[tmp[1]][tmp[0]] = changed_hash[c]>0?1:0;
+    // }
     
     this.redraw();
+
+    // Update all cells are created
+    let changed_coords = Object.keys(changed_hash);
+    for (let i = 0, c; c = changed_coords[i]; i++) {
+	let tmp = c.split(',').map(Number);
+	this.update_cell_alive_hash(tmp[0], tmp[1], new_state);
+    }
 };
 
 GRID.prototype.redraw = function () {
@@ -223,10 +321,14 @@ GRID.prototype.import_rle = function (data) {
 	    {
 		this.State[Number(keywords['y'])+ycursor][Number(keywords['x'])+(xcursor++)] = 1;
 		this.redraw_cell(Number(keywords['x'])+xcursor-1, Number(keywords['y'])+ycursor);
+		this.update_cell_alive_hash(Number(keywords['x'])+xcursor-1, Number(keywords['y'])+ycursor);
 	    }
 	}
 	if (d == 'b') {
-	    for(let j=0;j<num;j++) this.State[Number(keywords['y'])+ycursor][Number(keywords['x'])+(xcursor++)] = 0;
+	    for(let j=0;j<num;j++)
+	    {
+		this.State[Number(keywords['y'])+ycursor][Number(keywords['x'])+(xcursor++)] = 0;
+	    }
 	}
 	if (d == '$') {
 	    for(let j=0;j<num;j++) {
