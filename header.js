@@ -35,7 +35,8 @@ let GRID = function (svg, gridsvg, OffsetX, OffsetY) {
     this.GridSVG = gridsvg;
 
     this.AliveHash = {};
-
+    this.runningId = 0;
+    
     this.construct(svg, gridsvg, OffsetX, OffsetY);
 };
 let PATTERNS = {

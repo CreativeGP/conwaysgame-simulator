@@ -114,65 +114,17 @@ GRID.prototype.create_cell_svg = function (x, y) {
 };
 
 GRID.prototype.run = function () {
-    setInterval(() => this.update(), 100);
+    this.runningId = setInterval(() => this.update(), 100);
     // this.update();
     // setTimeout(() => this.run(), 100);
 };
 
 GRID.prototype.stop = function () {
-    clearInterval(this.update);
-};
-
-GRID.prototype.count_surrounded_live_cells = function (x, y, changed_list='') {
-    let res = 0;
-    let tmp = (y, x) => {
-	try {
-	    if (changed_list.indexOf('/${y} ${x}') == -1) {
-		// Pure cell
-		return this.State[y][x] & 0b01;
-	    } else {
-		// Dirty
-		return this.State[y][x] & 0b10;
-	    }
-	} catch (e) {}
-    };
-    res += tmp(y-1, x  )?1:0;
-    res += tmp(y-1, x+1)?1:0;
-    res += tmp(y  , x+1)?1:0;
-    res += tmp(y+1, x+1)?1:0;
-    res += tmp(y+1, x  )?1:0;
-    res += tmp(y+1, x-1)?1:0;
-    res += tmp(y  , x-1)?1:0;
-    res += tmp(y-1, x-1)?1:0;
-    return res;
+    clearInterval(this.runningId);
 };
 
 GRID.prototype.update = function () {
     console.time('UPDATE');
-
-    // for (let y = 1;
-    // 	 y < 999;
-    // 	 ++y)
-    // {
-    // 	for (let x = 1;
-    // 	     x < 999;
-    // 	     ++x)
-    // 	{
-    // 	    console.time('loop');
-    // 	    let state = this.State[y][x];
-    // 	    let live_cells = this.count_surrounded_live_cells(x, y);
-    // 	    if (state == 0 && live_cells == 3) {
-    // 	    	new_state[y][x] = 1;
-    // 	    }
-    // 	    if (state == 1) {
-    // 	    	if (live_cells == 2 || live_cells == 3) continue;
-    // 	    	if (live_cells <= 1 || live_cells >= 4) {
-    // 	    	    new_state[y][x] = 0;
-    // 	    	}
-    // 	    }
-    // 	    console.timeEnd('loop');
-    // 	}
-    // }
 
     let changed = '';
     let loopcounter = 0;
