@@ -23,6 +23,12 @@ window.onload = () => {
 	if (e.key === "w") grid.set_scale(grid.Scale*2);
     });
 
+    $('#zoom').click(() => grid.set_scale(grid.Scale*2));
+    $('#unzoom').click(() => grid.set_scale(grid.Scale/2));
+    $('#play').click(() => grid.run(draw));
+    $('#oneplay').click(() => grid.update(draw));
+    $('#stop').click(() => grid.stop());
+
     // Import RLE data by parameters
     let rle = getParameterByName('d', location.href);
     grid.import_rle(rle);
