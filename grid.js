@@ -91,6 +91,9 @@ GRID.prototype.draw_grid = function () {
 };
 
 GRID.prototype.redraw_cell = function (CellX, CellY) {
+    // TODO: Create state?
+    if (!this.State[CellY][CellX]) return;
+    
     let color = this.State[CellY][CellX].alive ? '#fff' : '#000';
     if (!this.Cells[CellY][CellX]) {
 	if (color == '#fff') {
@@ -242,26 +245,29 @@ GRID.prototype.update = function () {
     }
     console.log(loopcounter);
 
-    //    this.State = new_state;
-
-    this.redraw();
+    console.time('draw');
+    this.redraw(changed);
+    console.timeEnd('draw');
 
     console.timeEnd('UPDATE');
 };
 
-GRID.prototype.redraw = function () {
-    // Just call redraw_cell() with all cells
-    for (let y = this.Origin.y;
-	 y < this.Origin.y+this.CellHeight+2;
-	 ++y)
-    {
-	for (let x = this.Origin.x;
-	     x < this.Origin.x+this.CellWidth+2;
-	     ++x)
-	{
-	    this.redraw_cell(x, y);
-	}
+GRID.prototype.redraw = function (changed='') {
+    let count = 0;
+    
+    let changed_list = changed.split('/');
+    for (let i = 0, len = changed_list.length; i < len; ++i) {
+    	let tmp = changed_list[i].split(' ');
+    	let x = tmp[0];
+    	let y = tmp[1];
+    	if (this.Origin.x <= x && x <= this.Origin.x+this.CellWidth+1 &&
+    	    this.Origin.y <= y && y <= this.Origin.y+this.CellHeight+1) {
+    	    this.redraw_cell(x, y);
+    	    count++;
+    	}
     }
+    
+    console.log(count);
 };
 
 GRID.prototype.import_rle = function (data) {
