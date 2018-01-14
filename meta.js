@@ -1,3 +1,5 @@
+//BOND! https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js
+
 function getRandomString(myStrong){
  strong = 1000;
     if (myStrong) strong = myStrong;
