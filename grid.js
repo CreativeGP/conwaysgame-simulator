@@ -8,7 +8,7 @@ GRID.prototype.construct = function (svg, gridsvg, OffsetX, OffsetY) {
  	this.State[i] = new Array(5000);
 	this.Cells[i] = new Array(5000);
 	for (let j = 0; j < 1000; ++j) {
-	    this.State[i][j] = new CELLSTATE(0);
+	    this.State[i][j] = 0;
 	}
     }
 
@@ -25,7 +25,7 @@ GRID.prototype.construct = function (svg, gridsvg, OffsetX, OffsetY) {
 	    if (LastCell[0]===grid_x && LastCell[1]===grid_y) return;
 
 	    // Switch 0 and 1 in the selecting rect
-	    this.State[grid_y][grid_x].alive ^= 1;
+	    this.State[grid_y][grid_x] ^= 0b01;
 
 	    // Redraw
 	    this.redraw_cell(grid_x, grid_y);
@@ -46,7 +46,7 @@ GRID.prototype.construct = function (svg, gridsvg, OffsetX, OffsetY) {
 	    if (LastCell[0]===grid_x && LastCell[1]===grid_y) return;
 
 	    // Switch 0 and 1 in the selecting rect
-	    this.State[grid_y][grid_x].alive ^= 1;
+	    this.State[grid_y][grid_x] ^= 0b01;
 
 	    // Redraw
 	    this.redraw_cell(grid_x, grid_y);
@@ -63,7 +63,8 @@ GRID.prototype.construct = function (svg, gridsvg, OffsetX, OffsetY) {
 };
 
 GRID.prototype.update_cell_alive_hash = function (x, y, data=this.State) {
-    if (data[y][x].alive) {
+    if (!FUNCALL((r, n)=>is_safe_index(r, n), data, y, x)) return;
+    if (data[y][x] & 0b01) {
 	this.AliveHash[`${x} ${y}`] = { x: x, y: y };
 	//	console.log('added ${x} ${y}');
     } else {
@@ -92,9 +93,9 @@ GRID.prototype.draw_grid = function () {
 
 GRID.prototype.redraw_cell = function (CellX, CellY) {
     // TODO: Create state?
-    if (!this.State[CellY][CellX]) return;
+    if (!FUNCALL((r, n)=>is_safe_index(r, n), this.State, CellY, CellX)) return;
     
-    let color = this.State[CellY][CellX].alive ? '#fff' : '#000';
+    let color = (this.State[CellY][CellX] & 0b01) ? '#fff' : '#000';
     if (!this.Cells[CellY][CellX]) {
 	if (color == '#fff') {
 	    // Make new SVG::Rect object if the object is undefined
@@ -128,10 +129,10 @@ GRID.prototype.count_surrounded_live_cells = function (x, y, changed_list='') {
 	try {
 	    if (changed_list.indexOf('/${y} ${x}') == -1) {
 		// Pure cell
-		return this.State[y][x].alive;
+		return this.State[y][x] & 0b01;
 	    } else {
 		// Dirty
-		return this.State[y][x].tmp;
+		return this.State[y][x] & 0b10;
 	    }
 	} catch (e) {}
     };
@@ -180,13 +181,13 @@ GRID.prototype.update = function () {
     let count_surrounded_live_cells = (x, y) => {
 	let res = 0;
 	const tmp = (y, x) => {
-	    if (!self.State[y] || !self.State[y][x]) return 0;
+	    if (!is_safe_index(is_safe_index(self.State, y), x)) return 0;
 	    if (changed.indexOf(`/${x} ${y}`) == -1) {
 		// Pure cell
-		return self.State[y][x].alive;
+		return self.State[y][x] & 0b01;
 	    } else {
 		// Dirty
-		return self.State[y][x].tmp;
+		return self.State[y][x] & 0b10;
 	    }
 	};
 	res += tmp(y-1, x  )?1:0;
@@ -214,23 +215,24 @@ GRID.prototype.update = function () {
 	for (let j = x-1; j <= x+1; j++) {
     	    for (let k = y-1; k <= y+1; k++) {
 		let identifier = `/${j} ${k}`;
-    		if (this.State[k] && this.State[k][j] && changed.indexOf(identifier) == -1) {
+    		if (FUNCALL((r, n)=>is_safe_index(r, n), this.State, k, j)
+		    && changed.indexOf(identifier) == -1) {
     		    console.time('loop');
     		    loopcounter++;
 		    changed += identifier;
 
-    		    let state = this.State[k][j].alive;
+    		    let state = this.State[k][j] & 0b01;
 		    // Save value before change
-		    this.State[k][j].tmp = state;
+		    this.State[k][j] = (state << 1) + state;
 		    
     		    let live_cells = count_surrounded_live_cells(j, k);
     		    if (state == 0 && live_cells == 3) {
-    		    	this.State[k][j].alive = 1;
+    		    	this.State[k][j] |= 0b01;
     		    }
     		    if (state == 1) {
     		    	if (live_cells == 2 || live_cells == 3) continue;
     		    	if (live_cells <= 1 || live_cells >= 4) {
-    		    	    this.State[k][j].alive = 0;
+    		    	    this.State[k][j] &= ~0b01;
     		    	}
     		    }
 
@@ -284,7 +286,7 @@ GRID.prototype.import_rle = function (data) {
 	if (d == 'o') {
 	    for(let j=0;j<num;j++)
 	    {
-		this.State[Number(keywords['y'])+ycursor][Number(keywords['x'])+(xcursor++)].alive = 1;
+		this.State[Number(keywords['y'])+ycursor][Number(keywords['x'])+(xcursor++)] |= 0b01;
 		this.redraw_cell(Number(keywords['x'])+xcursor-1, Number(keywords['y'])+ycursor);
 		this.update_cell_alive_hash(Number(keywords['x'])+xcursor-1, Number(keywords['y'])+ycursor);
 	    }
@@ -292,7 +294,7 @@ GRID.prototype.import_rle = function (data) {
 	if (d == 'b') {
 	    for(let j=0;j<num;j++)
 	    {
-		this.State[Number(keywords['y'])+ycursor][Number(keywords['x'])+(xcursor++)].alive = 0;
+		this.State[Number(keywords['y'])+ycursor][Number(keywords['x'])+(xcursor++)] &= ~0b01;
 	    }
 	}
 	if (d == '$') {
@@ -313,7 +315,7 @@ GRID.prototype.export_rle = function () {
     let old = 0, num = 1;
     for (let y = 0; y < 1000; ++y) {
 	for (let x = 0; x < 1000; ++x) {
-	    let state = this.State[y][x].alive;
+	    let state = this.State[y][x] & 0b01;
 	    if (state == old) {
 		num++;
 		old = state;

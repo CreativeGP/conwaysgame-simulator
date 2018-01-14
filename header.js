@@ -19,13 +19,6 @@ let BUTTON = function (draw, x, y, width, height, text, onclick, onhover) {
     this.construct(draw, x, y, width, height, text, onclick, onhover);
 };
 
-let CELLSTATE = function (alive) {
-    this.alive = alive;
-    this.tmp = 0;
-    this.tmp2 = false;
-};
-CELLSTATE.prototype.reflect;
-
 let GRID = function (svg, gridsvg, OffsetX, OffsetY) {
     this.OffsetX = OffsetX;
     this.OffsetY = OffsetY;

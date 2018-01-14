@@ -391,3 +391,17 @@ Math.cutMinus = function (n) {
     if (n < 0) n = 0;
     return n;
 };
+
+let is_undef = (n) => n === void 0;
+let is_safe_index = (arr, n) => {
+    if (arr === false) return false;
+    if (n < 0 || arr.length <= n) return false;
+    return arr;
+};
+let FUNCALL = (f, init, ...args) => {
+    let res = init;
+    for (let i = 0; i < args.length; ++i) {
+	res = f(res, args[i]);
+    }
+    return res;
+};

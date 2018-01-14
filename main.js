@@ -4,7 +4,6 @@
 //BOND! rle.js
 //BOND! button.js
 //BOND! grid.js
-//BOND! cellstate.js
 
 window.onload = () => {
     let draw = SVG('drawing').size(SimulatorWidth, SimulatorHeight);

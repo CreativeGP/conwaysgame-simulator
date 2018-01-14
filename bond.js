@@ -5,4 +5,3 @@ document.write(`<script src="rle.js"></script>`);
 document.write(`<script src="grid.js"></script>`);
 document.write(`<script src="button.js"></script>`);
 document.write(`<script src="main.js"></script>`);
-document.write(`<script src="cellstate.js"></script>`);
