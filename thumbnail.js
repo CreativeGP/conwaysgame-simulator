@@ -7,7 +7,7 @@ function make_thumbnail_canvas(cvs, data, width, height) {
     // Get a context for 2d drawing
     let ctx = cvs.getContext('2d');
 
-    // Get the dimension] of the data
+    // Get the dimension of the data
     let dimension = get_rle_dimension(data);
 
     let pixels_per_cell = (() => {
